@@ -1762,20 +1762,25 @@ test_expect_success 'updateInstead with push-to-checkout hook' '
 
 test_expect_success 'denyCurrentBranch and worktrees' '
 	git worktree add new-wt &&
+	git clone --bare . bare.git &&
+	git -C bare.git worktree add bare-wt &&
 	git clone . cloned &&
 	test_commit -C cloned first &&
 	test_config receive.denyCurrentBranch refuse &&
 	test_must_fail git -C cloned push origin HEAD:new-wt &&
+	test_config -C bare.git receive.denyCurrentBranch refuse &&
+	test_must_fail git -C cloned push ../bare.git HEAD:bare-wt &&
 	test_config receive.denyCurrentBranch updateInstead &&
 	git -C cloned push origin HEAD:new-wt &&
-	test_must_fail git -C cloned push --delete origin new-wt
+	test_must_fail git -C cloned push --delete origin new-wt &&
+	test_config -C bare.git receive.denyCurrentBranch updateInstead &&
+	git -C cloned push ../bare.git HEAD:bare-wt &&
+	test_must_fail git -C cloned push --delete ../bare.git bare-wt
 '
 
 test_expect_success 'refuse fetch to current branch of worktree' '
 	test_commit -C cloned second &&
 	test_must_fail git fetch cloned HEAD:new-wt &&
-	git clone --bare . bare.git &&
-	git -C bare.git worktree add bare-wt &&
 	test_must_fail git -C bare.git fetch ../cloned HEAD:bare-wt &&
 	git fetch -u cloned HEAD:new-wt &&
 	git -C bare.git fetch -u ../cloned HEAD:bare-wt
