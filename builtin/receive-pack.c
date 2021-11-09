@@ -1456,11 +1456,11 @@ static const char *update_worktree(unsigned char *sha1, const struct worktree *w
 		work_tree = worktree->path;
 	else if (git_work_tree_cfg)
 		work_tree = git_work_tree_cfg;
+	else if (is_bare_repository())
+		return "denyCurrentBranch = updateInstead needs a worktree";
 	else
 		work_tree = "..";
 
-	if (is_bare_repository())
-		return "denyCurrentBranch = updateInstead needs a worktree";
 	if (worktree)
 		git_dir = get_worktree_git_dir(worktree);
 	if (!git_dir)
@@ -1486,7 +1486,7 @@ static const char *update(struct command *cmd, struct shallow_info *si)
 	struct object_id *old_oid = &cmd->old_oid;
 	struct object_id *new_oid = &cmd->new_oid;
 	int do_update_worktree = 0;
-	const struct worktree *worktree = is_bare_repository() ? NULL : find_shared_symref("HEAD", name);
+	const struct worktree *worktree = find_shared_symref("HEAD", name);
 
 	/* only refs/... are allowed */
 	if (!starts_with(name, "refs/") || check_refname_format(name + 5, 0)) {
